@@ -2,6 +2,8 @@ AWS_REGION=us-east-1
 AWS_ACCOUNT_ID=123456789012
 AWS_ECR_URL=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
+DOCKER_IMAGE_REPO=$(AWS_ECR_URL)/3R-project-repo
+
 CODE_ARTIFACT_REPO=python-packages
 CODE_ARTIFACT_DOMAIN=code-artifacts
 
@@ -35,7 +37,7 @@ test-all: test-formatting-linting test-pytest
 
 .PHONY: test-formatting-linting
 test-formatting-linting: 	## Run all the formating/linting
-test-formatting-linting: test-isort test-black test-flake8 test-pylint 
+test-formatting-linting: test-isort test-black test-flake8 test-pylint test-docker-lint
 
 .PHONY: test-isort
 test-isort:	## Check that all files have their import statements correctly formatted, fails if not
@@ -66,6 +68,30 @@ format:		## Applies isort and black formatting
 	isort --profile black .
 	black .
 
+
+.PHONY: docker-build
+docker-build:	## Build the docker image for the package
+# don't copy over any build files
+	make clean
+	docker buildx build --load --tag $(DOCKER_IMAGE_REPO):$(call get_current_version) \
+		--cache-from type=gha \
+		--cache-to "type=gha,mode=max" .
+
+.PHONY: test-docker-lint
+test-docker-lint:	## Check linting of Dockerfile using hadolint
+	docker run --rm -i hadolint/hadolint < Dockerfile
+
+.PHONY: docker-test
+docker-test:	## Run the integration test on the built image
+	docker run -v $$PWD/tests:/usr/app/tests $(DOCKER_IMAGE_REPO):$(call get_current_version) --message=Hallo
+
+.PHONY: docker-login
+docker-login:	## Login in to AWS ECR - requires AWS credentials to be set
+	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ECR_URL)
+
+.PHONY: docker-push
+docker-push:	## Push docker image to AWS ECR - requires docker-login step
+	docker push $(DOCKER_IMAGE_REPO):$(call get_current_version)
 
 .PHONY: get-code-artifact-url
 get-code-artifact-url:

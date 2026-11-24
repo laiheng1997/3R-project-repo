@@ -60,6 +60,9 @@ jobs:
       run: make test-pylint
 
 
+    - name: Test that docker linter is passing, fails if not
+      run: make test-docker-lint
+
 
   release:
     needs: [test-pytest, test-formatting-linting]
@@ -112,4 +115,26 @@ jobs:
           semantic-release publish -v DEBUG -D branch=main
         fi
 
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        buildkitd-flags: --debug
+
+    - name: Login in to AWS ECR
+      run: make docker-login
+
+    - name: Expose GH cache URLs & token
+      uses: crazy-max/ghaction-github-runtime@v3
+
+    - name: Docker build
+      run: |
+        make docker-build
+
+    - name: Run the integration test on the built image
+      run: make docker-test
+
+    - name: Push docker image to AWS ECR
+      run: make docker-push
 
