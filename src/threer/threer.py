@@ -10,3 +10,6 @@ def hello_world(message):
     logger.warning("This is WARN level log message")
     logger.error("This is ERROR level log message")
     return f"Hello world!: {message}"
+
+def add(number):
+    return f"number + 1"
