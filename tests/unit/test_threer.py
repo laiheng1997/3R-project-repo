@@ -1,6 +1,6 @@
 import pytest
 
-from 3R_project_repo.3R_project_repo import hello_world
+from threer.threer import hello_world
 
 
 @pytest.mark.parametrize(

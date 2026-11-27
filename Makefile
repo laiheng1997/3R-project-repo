@@ -2,7 +2,7 @@ AWS_REGION=us-east-1
 AWS_ACCOUNT_ID=123456789012
 AWS_ECR_URL=$(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
-DOCKER_IMAGE_REPO=$(AWS_ECR_URL)/3R_project_repo
+DOCKER_IMAGE_REPO=$(AWS_ECR_URL)/threer
 
 CODE_ARTIFACT_REPO=python-packages
 CODE_ARTIFACT_DOMAIN=code-artifacts
@@ -58,7 +58,7 @@ test-pylint:	## Check pylint is OK or fails
 .PHONY: test-pytest
 test-pytest:	## Run tests with pytest
 	# Run coverage only on the unit tests
-	pytest --cov=3R_project_repo tests/unit
+	pytest --cov=threer tests/unit
 
 	# Then run tests without coverage
 	pytest
